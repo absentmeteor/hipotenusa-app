@@ -1,0 +1,42 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculadora de Hipotenusa</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+</head>
+<body>
+    <h1>Calculadora de Hipotenusa</h1>
+    <label>Cateto A: <input type="number" id="catetoA"></label><br>
+    <label>Cateto B: <input type="number" id="catetoB"></label><br><br>
+    <button onclick="calcularHipotenusa()">Calcular</button>
+    <h2>Resultado: <span id="resultado">--</span></h2>
+
+    <script>
+        let modelo;
+
+        async function cargarModelo() {
+            modelo = await tf.loadLayersModel('./model.json');
+            console.log("Modelo cargado correctamente.");
+        }
+
+        async function calcularHipotenusa() {
+            const a = parseFloat(document.getElementById('catetoA').value);
+            const b = parseFloat(document.getElementById('catetoB').value);
+
+            if (isNaN(a) || isNaN(b)) {
+                alert("Por favor ingresa valores válidos para ambos catetos.");
+                return;
+            }
+
+            const entrada = tf.tensor2d([[a, b]]);
+            const salida = modelo.predict(entrada);
+            const resultado = await salida.data();
+            document.getElementById('resultado').innerText = resultado[0].toFixed(4);
+        }
+
+        cargarModelo();
+    </script>
+</body>
+</html>
