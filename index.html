@@ -17,7 +17,7 @@
 
         async function cargarModelo() {
             try {
-                modelo = await tf.loadLayersModel('./model.json');
+                modelo = await tf.loadLayersModel('carpeta_salida/model.json');
                 console.log("Modelo cargado correctamente.");
                 document.querySelector('button').disabled = false;
             } catch (error) {
