@@ -1,56 +1,83 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8" />
-    <title>Calculadora de Hipotenusa</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calculadora de Hipotenusa</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    #resultado {
+      font-weight: bold;
+      font-size: 1.2rem;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-    <h1>Calculadora de Hipotenusa</h1>
-    <label>Cateto A: <input type="number" id="catetoA"></label><br />
-    <label>Cateto B: <input type="number" id="catetoB"></label><br /><br />
-    <button onclick="calcularHipotenusa()" disabled>Calcular</button>
-    <h2>Resultado: <span id="resultado">--</span></h2>
+  <main class="container mt-5">
+    <div class="text-center mb-4">
+      <h1 class="fw-bold">Calculadora de Hipotenusa</h1>
+      <p>Usando un modelo entrenado con TensorFlow.js</p>
+    </div>
+    <div class="row">
+      <div class="col-md-6 offset-md-3">
+        <form onsubmit="calcularHipotenusa(); return false;">
+          <div class="mb-3">
+            <label for="cateto1" class="form-label">Cateto 1</label>
+            <input type="number" id="cateto1" class="form-control" value="3" required>
+          </div>
+          <div class="mb-3">
+            <label for="cateto2" class="form-label">Cateto 2</label>
+            <input type="number" id="cateto2" class="form-control" value="4" required>
+          </div>
+          <div class="mb-3 text-center">
+            <button type="submit" class="btn btn-primary">Calcular Hipotenusa</button>
+          </div>
+          <div class="mb-3" id="resultado">
+            Introduce los catetos y presiona calcular.
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
 
-    <script>
-        let modelo;
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+  <script>
+    let modelo = null;
 
-        async function cargarModelo() {
-            try {
-                modelo = await tf.loadLayersModel('carpeta_salida/model.json');
-                console.log("Modelo cargado correctamente.");
-                document.querySelector('button').disabled = false;
-            } catch (error) {
-                console.error("Error al cargar el modelo:", error);
-                alert("No se pudo cargar el modelo.");
-            }
-        }
+    // Cargar el modelo
+    (async () => {
+      try {
+        console.log("Cargando modelo...");
+        modelo = await tf.loadLayersModel("model.json");
+        console.log("Modelo cargado.");
+      } catch (error) {
+        console.error("No se pudo cargar el modelo:", error);
+        document.getElementById("resultado").innerText = "Error cargando el modelo.";
+      }
+    })();
 
-        async function calcularHipotenusa() {
-            if (!modelo) {
-                alert("El modelo aún no está cargado.");
-                return;
-            }
-            try {
-                const a = parseFloat(document.getElementById('catetoA').value);
-                const b = parseFloat(document.getElementById('catetoB').value);
+    async function calcularHipotenusa() {
+      if (!modelo) {
+        document.getElementById("resultado").innerText = "Modelo aún no cargado, espera un momento.";
+        return;
+      }
 
-                if (isNaN(a) || isNaN(b)) {
-                    alert("Por favor ingresa valores válidos para ambos catetos.");
-                    return;
-                }
+      const c1 = parseFloat(document.getElementById("cateto1").value);
+      const c2 = parseFloat(document.getElementById("cateto2").value);
 
-                const entrada = tf.tensor2d([[a, b]]);
-                const salida = modelo.predict(entrada);
-                const resultado = await salida.data();
-                document.getElementById('resultado').innerText = resultado[0].toFixed(4);
-            } catch (e) {
-                console.error("Error al predecir:", e);
-                alert("Error al hacer la predicción.");
-            }
-        }
+      if (isNaN(c1) || isNaN(c2)) {
+        document.getElementById("resultado").innerText = "Por favor ingresa valores válidos.";
+        return;
+      }
 
-        cargarModelo();
-    </script>
+      const entrada = tf.tensor2d([[c1, c2]]);
+      const prediccion = modelo.predict(entrada);
+      const resultado = await prediccion.data();
+      const hipotenusa = resultado[0].toFixed(2);
+
+      document.getElementById("resultado").innerText = `La hipotenusa es aproximadamente: ${hipotenusa}`;
+    }
+  </script>
 </body>
 </html>
