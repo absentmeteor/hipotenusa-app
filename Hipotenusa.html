@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Predicción de Hipotenusa</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.18.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #74ebd5, #9face6);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    h1 {
+      margin-top: 40px;
+      color: #333;
+    }
+    .container {
+      background-color: white;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      padding: 30px 40px;
+      margin-top: 20px;
+      max-width: 600px;
+      width: 90%;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+      color: #555;
+    }
+    input {
+      padding: 10px;
+      margin-top: 5px;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      margin-top: 25px;
+      padding: 12px 24px;
+      font-size: 16px;
+      background-color: #4a90e2;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #357ab8;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 1.2em;
+      color: #222;
+    }
+    canvas {
+      margin-top: 30px;
+      max-width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h1>Predicción de Hipotenusa</h1>
+  <div class="container">
+    <label for="a">Cateto a:</label>
+    <input type="number" id="a" value="12" step="any">
+
+    <label for="b">Cateto b:</label>
+    <input type="number" id="b" value="10" step="any">
+
+    <button onclick="entrenarYPredecir()">Entrenar y Predecir</button>
+
+    <div id="result">Resultado:</div>
+    <canvas id="lossChart"></canvas>
+  </div>
+
+  <script>
+    const xs = tf.tensor2d([[10, 5], [3, 4], [4, 6]]);
+    const ys = tf.tensor2d([[11.18], [5], [7.21]]);
+
+    const model = tf.sequential();
+    model.add(tf.layers.dense({ units: 1, inputShape: [2] }));
+
+    model.compile({
+      optimizer: tf.train.adam(0.1),
+      loss: 'meanSquaredError'
+    });
+    async function entrenarYPredecir() {
+  document.getElementById("result").innerText = "Entrenando modelo... por favor espera.";
+  losses.length = 0;
+
+  const a = parseFloat(document.getElementById("a").value);
+  const b = parseFloat(document.getElementById("b").value);
+
+  if (isNaN(a) || isNaN(b)) {
+    document.getElementById("result").innerText = "Por favor ingresa valores numéricos válidos.";
+    return;
+  }
+
+  await model.fit(xs, ys, {
+    epochs: 1000,
+    verbose: 0,
+    callbacks: {
+      onEpochEnd: async (epoch, logs) => {
+        losses.push({ epoch: epoch, loss: logs.loss });
+      }
+    }
+  });
+
+  const entrada = tf.tensor2d([[a, b]]);
+  const prediccion = model.predict(entrada);
+  const valor = await prediccion.array();
+
+  if (valor && valor[0] && valor[0][0]) {
+    document.getElementById("result").innerText =
+      Resultado :Hipotenusa ≈ ${valor[0][0].toFixed(2)};
+  } else {
+    document.getElementById("result").innerText =
+      "No se pudo calcular la hipotenusa.";
+  }
+
+  mostrarGrafica();
+}
+
+    const losses = [];
+
+    function mostrarGrafica() {
+      const ctx = document.getElementById('lossChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: losses.map(l => l.epoch),
+          datasets: [{
+            label: 'Pérdida (Loss)',
+            data: losses.map(l => l.loss),
+            borderColor: 'rgba(75, 192, 192, 1)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            fill: true,
+            tension: 0.2,
+            pointRadius: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              title: { display: true, text: 'Época' }
+            },
+            y: {
+              title: { display: true, text: 'Pérdida' }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
